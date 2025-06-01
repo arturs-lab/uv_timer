@@ -1,6 +1,6 @@
 	TITLE	"UV eraser timer"
-	LIST	P = PIC16C54
-;	INCLUDE <P16C54.INC>
+	LIST	P = PIC16C84
+	INCLUDE <P16C84.INC>
 
 ind0    equ     00h             ; index register
 rtcc    equ     01h             ; RTTC register
@@ -30,7 +30,6 @@ lastcnt	equ	led1 + 1	; previous rtcc value
 
 
 optval	equ	B'00100000'	; value of option register
-trisa_val equ	B'00010100'	; value of tris A register
 
 	org	01ffh
 begin	goto	start
@@ -173,4 +172,3 @@ led_code
 
 
 	END
-

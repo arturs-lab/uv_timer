@@ -1,8 +1,23 @@
-[PROJECT]
-Target=UVT54.HEX
+[Project]
+Path=C:\PROGRA~1\MPLAB\FILES\uvtimer\
+Target=MAIN.HEX
 Development_Mode=48
-Processor=0x654a
+Processor=0x6c84
 ToolSuite=Microchip
+
+[compiler]
+hex_file=1
+error_file=1
+list_file=1
+xref_file=0
+open_error_file=1
+default_dir=1
+asm_options=
+c_options=
+working_dir=
+
+[Source]
+0=main.asm
 
 [Directories]
 Include=
@@ -10,22 +25,14 @@ Library=
 LinkerScript=
 
 [Target Data]
-FileList=UVT54.ASM;
+FileList=main.asm;
 BuildTool=MPASM
-OptionString=/e+;/l+;/x-;/w0;/c+;/m+;/rhex;
-AdditionalOptionString=
+OptionString=
+AdditionalOptionString=/aINHX8M /e+ /l+
 BuildRequired=1
 
-[UVT54.ASM]
+[main.asm]
 Type=4
-Path=
-FileList=P16C54.INC;
-BuildTool=
-OptionString=
-AdditionalOptionString=
-
-[P16C54.INC]
-Type=5
 Path=
 FileList=
 BuildTool=
@@ -33,14 +40,13 @@ OptionString=
 AdditionalOptionString=
 
 [mru-list]
-1=c:\pic\files\uvtime~1\uvt54.asm
-2=c:\pic\files\uvtimer\main1.asm
-3=c:\pic\files\uvtimer\7seg.asm
-4=c:\pic\files\uvtimer\main.asm
+1=c:\pic\files\uvtimer\main.asm
+
 
 [Windows]
-3=0000 c:\pic\files\uvtime~1\uvt54.asm 405 0 1009 410 9 0
-2=0010 4 6 403 342 9 4
-1=0040 403 412 891 532 9 4
+3=0000 c:\pic\files\uvtimer\main.asm 374 23 993 415 9 0
+2=0040 403 412 891 532 9 4
+1=0010 4 6 403 342 9 4
 0=0020 4 338 404 668 9 0
 Stopwatch=408 566 702 741 9 0
+
