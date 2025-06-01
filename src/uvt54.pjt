@@ -1,0 +1,46 @@
+[PROJECT]
+Target=UVT54.HEX
+Development_Mode=48
+Processor=0x654a
+ToolSuite=Microchip
+
+[Directories]
+Include=
+Library=
+LinkerScript=
+
+[Target Data]
+FileList=UVT54.ASM;
+BuildTool=MPASM
+OptionString=/e+;/l+;/x-;/w0;/c+;/m+;/rhex;
+AdditionalOptionString=
+BuildRequired=1
+
+[UVT54.ASM]
+Type=4
+Path=
+FileList=P16C54.INC;
+BuildTool=
+OptionString=
+AdditionalOptionString=
+
+[P16C54.INC]
+Type=5
+Path=
+FileList=
+BuildTool=
+OptionString=
+AdditionalOptionString=
+
+[mru-list]
+1=c:\pic\files\uvtime~1\uvt54.asm
+2=c:\pic\files\uvtimer\main1.asm
+3=c:\pic\files\uvtimer\7seg.asm
+4=c:\pic\files\uvtimer\main.asm
+
+[Windows]
+3=0000 c:\pic\files\uvtime~1\uvt54.asm 405 0 1009 410 9 0
+2=0010 4 6 403 342 9 4
+1=0040 403 412 891 532 9 4
+0=0020 4 338 404 668 9 0
+Stopwatch=408 566 702 741 9 0
