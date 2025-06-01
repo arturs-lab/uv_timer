@@ -19,17 +19,20 @@ F       equ     1
 Z	equ	2		; zero flag bit
 
 
-min	equ	0ch		; minute counter
-sec	equ	min + 1		; seconds counter
-kbdstat	equ	sec + 1		; keyboard status
+kbdstat	equ	0ch		; keyboard status
 kbdtmr	equ	kbdstat + 1	; keyboard timer
 tmp	equ	kbdtmr + 1	; temporary register
 led0	equ	tmp + 1		; display code for LED 0
 led1	equ	led0 + 1	; display code for LED 1
 lastcnt	equ	led1 + 1	; previous rtcc value
+sec	equ	lastcnt + 1	; seconds counter
+secten	equ	sec + 1		; tens of seconds
+min	equ	secten + 1	; minute counter
+minten	equ	min + 1		; tens of minutes
 
 
-optval	equ	B'00100000'	; value of option register
+optval	equ	B'00101000'	; value of option register
+trisa_val equ	B'00010100'	; value of tris A register
 
 	org	01ffh
 begin	goto	start
@@ -39,19 +42,21 @@ begin	goto	start
 start	clrw
         clrf    intcon          ; disable interrupts
 	clrf	porta		; reset port a
-	bsf	porta,0		; set bit 0
         clrf    portb           ; reset port b
         bsf     status,rp0	; select upper memory bank
 	movlw	optval
         movwf   opt
-        clrf    trisa
-        bsf     trisa,2         ; set bit 2 as input
+	movlw	trisa_val
+        movwf   trisa
         clrf    trisb
         bsf     trisb,7         ; set bit 7 as input
         bcf     status,rp0	; select lower memory bank
 reset
+	bsf	porta,0		; set bit 0
 	clrf	min
+	clrf	minten
 	clrf	sec
+	clrf	secten
 	clrf	kbdstat
 	clrf	kbdtmr
 	clrf	led0
@@ -60,30 +65,34 @@ reset
 	clrf	rtcc
 
 main	movf	rtcc,w		; get current RTCC value
-	subwf	lastcnt,W	; see if it changed
+	xorwf	lastcnt,W	; see if it changed
 	btfsc	status,Z	; yes
-;	btfss	status,Z	; for testing
 	goto	main		; no, continue loop
 	movf	rtcc,W
 	movwf	lastcnt
-	sublw	1eh		; see if rtcc reached 30 cycles
+	xorlw	.59		; see if rtcc reached 60 cycles
 	btfss	status,Z	; reset RTCC and decrement time counters if yes
-;	btfsc	status,Z	; for testing
 	goto	kbdscan		; otherwise just scan keyboard and update display
 
 	clrf	rtcc		; reset RTCC
+	clrf	lastcnt
 	movf	sec,W		; fetch seconds counter
 	btfss	status,Z	; see if already zero
 	goto	secdecr		; no, just decrement seconds
 	movlw	.59		; set seconds to 59 (dec)
 	movwf	sec		; store in counter before adjusting minutes
 
-	movf	min,W		; fetch minutes counter after seconds went past 0
-	btfsc	status,Z	; see if already zero
-	bcf	porta,3		; yes, turn off the lamp
-	goto	disp_adj	; scan the keyboard and update the display
+	movf	porta,w		; test
+	xorlw	08h		; test
+	movwf	porta		; test
 
-	decf	min,F		; decrement minutes
+;	movf	min,W		; fetch minutes counter after seconds went past 0
+;	btfss	status,Z	; see if already zero
+;	goto	decmin		; no, decrement minutes
+;	bcf	porta,3		; yes, turn off the lamp
+;	goto	disp_adj	; scan the keyboard and update the display
+
+;decmin	decf	min,F		; decrement minutes
 	goto	disp_adj	; scan the keyboard and update the display
 
 secdecr	decf	sec,F		; decrement seconds counter
@@ -101,43 +110,47 @@ getcode	movwf	tmp		; save data for later
 	movwf	led1		; store
 
 kbdscan	
-	; add tray switch test here
+	; tutaj wstaw test trayswitcha
 
-	clrf	portb		; turn off display
-	movf	porta,W		; fetch display enable bits
-	btfsc	portb,7		; see if key pushed
-	goto	key1
-	iorwf	kbdstat,F	; set bit for currently pushed key
-key1	xorlw	03h		; reverse bits 0 and 1 of port A
-	movwf	porta
-	btfsc	portb,7
-	goto	display
-	iorwf	kbdstat,W	; set bit for currently pushed key
-	andlw	03h		; strip extra bits
-	movwf	kbdstat		; store result in status byte
-	btfsc	status,Z	; check if any keys pressed
-	goto	display		; no, display data
-	incf	kbdtmr,F	; increment keyboard counter
-	btfss	kbdtmr,4	; see if counted 16 periods
-	goto	display		; no, continue debouncing keys
+;	clrf	portb		; turn off display
+;	movf	porta,W		; fetch display enable bits
+;	btfsc	portb,7		; see if key pushed
+;	goto	key1
+;	iorwf	kbdstat,F	; set bit for currently pushed key
+;key1	xorlw	03h		; reverse bits 0 and 1 of port A
+;	movwf	porta
+;	btfsc	portb,7
+;	goto	display
+;	iorwf	kbdstat,W	; set bit for currently pushed key
+;	andlw	03h		; strip extra bits
+;	movwf	kbdstat		; store result in status byte
+;	btfsc	status,Z	; check if any keys pressed
+;	goto	display		; no, display data
+;	incf	kbdtmr,F	; increment keyboard counter
+;	btfss	kbdtmr,4	; see if counted 16 periods
+;	goto	display		; no, continue debouncing keys
 ; we have a key(s) pressed!
-k_press
-	decf	kbdstat,F
-	btfss	status,Z	; was it key #1?
-	goto	key2		; no, check key #2
-	incf	min,F		; yes, increment minutes counter
-	goto	display
-key2	decf	kbdstat,F
-	btfss	status,Z	; was it key #2?
-	goto	key3		; no, it's both! reset counters
-	movlw	.10		; add 10(dec) to minutes counter
-	addwf	min,F
-	goto	display
-key3	goto	reset
+;k_press
+;	decf	kbdstat,F
+;	btfss	status,Z	; was it key #1?
+;	goto	key2		; no, check key #2
+;	incf	min,F		; yes, increment minutes counter
+;	goto	display
+;key2	decf	kbdstat,F
+;	btfss	status,Z	; was it key #2?
+;	goto	key3		; no, it's both! reset counters
+;	movlw	.10		; add 10(dec) to minutes counter
+;	addwf	min,F
+;	goto	display
+;key3	goto	reset
 
 
-display
-	btfss	porta,0		; see which digit is to be displayed
+display	movlw	0ffh
+	movwf	portb			; turn off the display
+	movf	porta,W
+	xorlw	03h
+	movwf	porta
+	btfsc	porta,0		; see which digit is to be displayed
 	goto	disp1
 	movf	led0,W
 	movwf	portb
@@ -172,3 +185,4 @@ led_code
 
 
 	END
+
